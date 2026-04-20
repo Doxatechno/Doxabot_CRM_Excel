@@ -6,6 +6,12 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+// Auth check — runs once on mount
+async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) window.location.href = '/login'
+}
+
 
 type Lead = {
   id: string
@@ -87,9 +93,10 @@ export default function CRMDashboard() {
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setMounted(true)
-    fetchAll()
-    fetchAllFollowUps()
+  checkAuth()
+  setMounted(true)
+  fetchAll()
+  fetchAllFollowUps()
     const channel = supabase.channel('realtime-crm')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, () => {
         fetchAll()
@@ -563,7 +570,12 @@ export default function CRMDashboard() {
                   </div>
                 )}
               </div>
-
+                <button className="btn btn-ghost" onClick={async () => {
+  await supabase.auth.signOut()
+  window.location.href = '/login'
+}}>
+  Sign Out
+</button>
               <div className="pill pill-live">
                 <div className="live-dot" /> Live
               </div>
