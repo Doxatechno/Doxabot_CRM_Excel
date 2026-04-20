@@ -101,14 +101,15 @@ export default function CRMDashboard() {
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [])
+
   useEffect(() => {
-  const handleClick = (e: MouseEvent) => {
-    const target = e.target as HTMLElement
-    if (!target.closest('.export-wrapper')) setShowExport(false)
-  }
-  document.addEventListener('click', handleClick)
-  return () => document.removeEventListener('click', handleClick)
-}, [])
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('.export-wrapper')) setShowExport(false)
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [])
 
   useEffect(() => {
     if (selectedLead) {
@@ -176,43 +177,29 @@ export default function CRMDashboard() {
 
   const pendingFollowUps = allFollowUps.filter(f => f.status === 'pending').length
   const whatsappMessages = messages.filter(m => !m.body?.startsWith('[Kate Call') && !m.body?.startsWith('[Follow-up'))
+
   function exportLeads(leadsToExport: Lead[], filename: string) {
-  const headers = ['Name', 'Phone', 'Category', 'CAT', 'Product', 'Variant', 'City', 'Budget', 'Units', 'Language', 'Status', 'Bot Step', 'Created']
-  const rows = leadsToExport.map(l => [
-    l.name ?? '',
-    l.phone ?? '',
-    l.category ?? '',
-    l.lead_cat ?? '',
-    l.product_name ?? '',
-    l.product_variant?.replace('q4_', '') ?? '',
-    l.customer_city ?? '',
-    l.budget_range?.replace('budget_', '') ?? '',
-    l.units ?? '',
-    l.language ?? '',
-    l.status ?? '',
-    getBotStepLabel(l.bot_step),
-    new Date(l.created_at).toLocaleDateString('en-IN')
-  ])
-  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n')
-  const blob = new Blob([csv], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
+    const headers = ['Name', 'Phone', 'Category', 'CAT', 'Product', 'Variant', 'City', 'Budget', 'Units', 'Language', 'Status', 'Bot Step', 'Created']
+    const rows = leadsToExport.map(l => [
+      l.name ?? '', l.phone ?? '', l.category ?? '', l.lead_cat ?? '',
+      l.product_name ?? '', l.product_variant?.replace('q4_', '') ?? '',
+      l.customer_city ?? '', l.budget_range?.replace('budget_', '') ?? '',
+      l.units ?? '', l.language ?? '', l.status ?? '',
+      getBotStepLabel(l.bot_step),
+      new Date(l.created_at).toLocaleDateString('en-IN')
+    ])
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = filename; a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const getStatusColor = (status: string) => {
     if (status === 'sent') return { bg: 'rgba(6,214,160,0.15)', color: '#06d6a0', border: 'rgba(6,214,160,0.3)' }
     if (status === 'pending') return { bg: 'rgba(255,159,28,0.15)', color: '#ff9f1c', border: 'rgba(255,159,28,0.3)' }
-    if (status === 'failed') return { bg: 'rgba(255,77,109,0.15)', color: '#ff4d6d', border: 'rgba(255,77,109,0.3)' }
-    return { bg: 'rgba(74,96,128,0.15)', color: '#4a6080', border: 'rgba(74,96,128,0.3)' }
-  }
-
-  const getDayIcon = (day: number, category: string) => {
-    if (day === 7 && category === 'warm') return '📞'
-    return '💬'
+    return { bg: 'rgba(255,77,109,0.15)', color: '#ff4d6d', border: 'rgba(255,77,109,0.3)' }
   }
 
   return (
@@ -221,66 +208,24 @@ export default function CRMDashboard() {
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-          --bg: #070a12;
-          --surface: #0d1117;
-          --surface2: #131b2e;
-          --border: #1e2d45;
-          --accent: #00e5ff;
-          --accent2: #7c3aed;
-          --hot: #ff4d6d;
-          --warm: #ff9f1c;
-          --cold: #4cc9f0;
-          --green: #06d6a0;
-          --text: #e2e8f0;
-          --muted: #4a6080;
+          --bg: #070a12; --surface: #0d1117; --surface2: #131b2e; --border: #1e2d45;
+          --accent: #00e5ff; --accent2: #7c3aed; --hot: #ff4d6d; --warm: #ff9f1c;
+          --cold: #4cc9f0; --green: #06d6a0; --text: #e2e8f0; --muted: #4a6080;
         }
         body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow: hidden; }
         .app { display: flex; height: 100vh; }
-        .sidebar {
-          width: 72px; background: var(--surface);
-          border-right: 1px solid var(--border);
-          display: flex; flex-direction: column; align-items: center;
-          padding: 20px 0; gap: 8px; position: relative; z-index: 10;
-        }
-        .logo-mark {
-          width: 40px; height: 40px;
-          background: linear-gradient(135deg, var(--accent), var(--accent2));
-          border-radius: 12px; display: flex; align-items: center; justify-content: center;
-          font-size: 20px; margin-bottom: 16px;
-          animation: logoPulse 3s ease-in-out infinite;
-        }
-        @keyframes logoPulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(0,229,255,0.3); }
-          50% { box-shadow: 0 0 35px rgba(0,229,255,0.6), 0 0 60px rgba(124,58,237,0.3); }
-        }
-        .nav-btn {
-          width: 44px; height: 44px; border-radius: 12px;
-          border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-          font-size: 18px; transition: all 0.2s; background: transparent; color: var(--muted); position: relative;
-        }
+        .sidebar { width: 72px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 8px; z-index: 10; }
+        .logo-mark { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px; animation: logoPulse 3s ease-in-out infinite; }
+        @keyframes logoPulse { 0%, 100% { box-shadow: 0 0 20px rgba(0,229,255,0.3); } 50% { box-shadow: 0 0 35px rgba(0,229,255,0.6), 0 0 60px rgba(124,58,237,0.3); } }
+        .nav-btn { width: 44px; height: 44px; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; background: transparent; color: var(--muted); position: relative; }
         .nav-btn:hover { background: var(--surface2); color: var(--text); }
-        .nav-btn.active {
-          background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(124,58,237,0.15));
-          color: var(--accent); box-shadow: 0 0 0 1px rgba(0,229,255,0.3);
-        }
-        .nav-btn.active::before {
-          content: ''; position: absolute; left: -1px; top: 50%; transform: translateY(-50%);
-          width: 3px; height: 20px; background: var(--accent); border-radius: 0 3px 3px 0;
-        }
+        .nav-btn.active { background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(124,58,237,0.15)); color: var(--accent); box-shadow: 0 0 0 1px rgba(0,229,255,0.3); }
+        .nav-btn.active::before { content: ''; position: absolute; left: -1px; top: 50%; transform: translateY(-50%); width: 3px; height: 20px; background: var(--accent); border-radius: 0 3px 3px 0; }
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .topbar {
-          height: 60px; background: var(--surface);
-          border-bottom: 1px solid var(--border);
-          display: flex; align-items: center; padding: 0 24px; gap: 16px;
-        }
+        .topbar { height: 60px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 16px; }
         .topbar-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); }
         .topbar-sub { font-size: 12px; color: var(--muted); margin-left: 4px; }
-        .live-indicator {
-          display: flex; align-items: center; gap: 6px;
-          font-size: 12px; color: var(--green);
-          background: rgba(6,214,160,0.08); padding: 4px 12px; border-radius: 20px;
-          border: 1px solid rgba(6,214,160,0.2);
-        }
+        .live-indicator { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--green); background: rgba(6,214,160,0.08); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(6,214,160,0.2); }
         .live-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: livePulse 1.5s ease-in-out infinite; }
         @keyframes livePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.7); } }
         .content { flex: 1; display: flex; overflow: hidden; }
@@ -291,20 +236,12 @@ export default function CRMDashboard() {
         .stat-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
         .stat-value { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; }
         .search-area { padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
-        .search-input {
-          width: 100%; background: var(--surface2); border: 1px solid var(--border);
-          border-radius: 8px; padding: 8px 12px 8px 32px; font-size: 13px; color: var(--text);
-          outline: none; transition: border 0.2s; font-family: 'DM Sans', sans-serif;
-        }
+        .search-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px 8px 32px; font-size: 13px; color: var(--text); outline: none; transition: border 0.2s; font-family: 'DM Sans', sans-serif; }
         .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,229,255,0.1); }
         .search-wrapper { position: relative; margin-bottom: 10px; }
         .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; }
         .filter-chips { display: flex; gap: 6px; }
-        .chip {
-          padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border);
-          background: transparent; color: var(--muted); font-size: 11px; font-weight: 600;
-          cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
-        }
+        .chip { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
         .chip:hover { border-color: var(--accent); color: var(--accent); }
         .chip.active-all { background: rgba(0,229,255,0.1); border-color: var(--accent); color: var(--accent); }
         .chip.active-hot { background: rgba(255,77,109,0.15); border-color: var(--hot); color: var(--hot); }
@@ -313,18 +250,11 @@ export default function CRMDashboard() {
         .lead-list { flex: 1; overflow-y: auto; }
         .lead-list::-webkit-scrollbar { width: 3px; }
         .lead-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        .lead-item {
-          padding: 14px 16px; border-bottom: 1px solid var(--border);
-          cursor: pointer; transition: all 0.2s; position: relative;
-          animation: fadeSlideIn 0.3s ease both;
-        }
+        .lead-item { padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.2s; position: relative; animation: fadeSlideIn 0.3s ease both; }
         @keyframes fadeSlideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
         .lead-item:hover { background: var(--surface2); }
         .lead-item.selected { background: rgba(0,229,255,0.05); }
-        .lead-item::before {
-          content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-          width: 3px; border-radius: 0 3px 3px 0;
-        }
+        .lead-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0 3px 3px 0; }
         .lead-item[data-cat="hot"]::before { background: var(--hot); }
         .lead-item[data-cat="warm"]::before { background: var(--warm); }
         .lead-item[data-cat="cold"]::before { background: var(--cold); }
@@ -340,17 +270,8 @@ export default function CRMDashboard() {
         .badge-cat { background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
         .right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
         .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--muted); }
-        .empty-orb {
-          width: 80px; height: 80px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(0,229,255,0.1), transparent);
-          border: 1px solid rgba(0,229,255,0.2);
-          display: flex; align-items: center; justify-content: center; font-size: 36px;
-          animation: orbFloat 4s ease-in-out infinite;
-        }
-        @keyframes orbFloat {
-          0%, 100% { transform: translateY(0); box-shadow: 0 0 20px rgba(0,229,255,0.1); }
-          50% { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,229,255,0.2); }
-        }
+        .empty-orb { width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, rgba(0,229,255,0.1), transparent); border: 1px solid rgba(0,229,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 36px; animation: orbFloat 4s ease-in-out infinite; }
+        @keyframes orbFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         .lead-header { padding: 20px 24px; background: var(--surface); border-bottom: 1px solid var(--border); animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
         .lead-header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
@@ -361,17 +282,10 @@ export default function CRMDashboard() {
         .detail-key { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
         .detail-val { font-size: 13px; color: var(--text); font-weight: 500; }
         .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
-        .tab-btn {
-          flex: 1; padding: 10px 6px; border: none; cursor: pointer;
-          font-size: 11px; font-weight: 600; color: var(--muted); background: transparent;
-          transition: all 0.2s; font-family: 'DM Sans', sans-serif; border-bottom: 2px solid transparent;
-        }
+        .tab-btn { flex: 1; padding: 10px 6px; border: none; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--muted); background: transparent; transition: all 0.2s; font-family: 'DM Sans', sans-serif; border-bottom: 2px solid transparent; }
         .tab-btn:hover { color: var(--text); }
         .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-        .chat-area {
-          flex: 1; overflow-y: auto; padding: 20px;
-          display: flex; flex-direction: column; gap: 10px; background: var(--bg);
-        }
+        .chat-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background: var(--bg); }
         .chat-area::-webkit-scrollbar { width: 3px; }
         .chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
         .msg { max-width: 75%; animation: msgPop 0.2s ease both; }
@@ -394,26 +308,19 @@ export default function CRMDashboard() {
         .cat-value { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: #a78bfa; }
         .step-bar { height: 3px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 6px; }
         .step-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; transition: width 0.5s ease; }
-        .loading-shimmer {
-          background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
-          background-size: 200% 100%; animation: shimmer 1.5s infinite;
-          border-radius: 8px; height: 60px; margin: 8px 16px;
-        }
+        .loading-shimmer { background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; height: 60px; margin: 8px 16px; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         audio { accent-color: var(--accent); }
         .followups-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
         .followups-area::-webkit-scrollbar { width: 3px; }
         .followups-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
         .followup-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; animation: fadeSlideIn 0.3s ease both; }
-        .followup-timeline { display: flex; gap: 12px; align-items: flex-start; }
-        .followup-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
-        .notification-badge {
-          position: absolute; top: 6px; right: 6px;
-          width: 16px; height: 16px; border-radius: 50%;
-          background: var(--hot); color: #fff;
-          font-size: 9px; font-weight: 700;
-          display: flex; align-items: center; justify-content: center;
-        }
+        .notification-badge { position: absolute; top: 6px; right: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--hot); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .full-view { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .full-view-header { padding: 16px 24px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .full-view-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .full-view-body::-webkit-scrollbar { width: 3px; }
+        .full-view-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
       `}</style>
 
       <div className="app" style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.5s' }}>
@@ -422,14 +329,14 @@ export default function CRMDashboard() {
         <aside className="sidebar">
           <div className="logo-mark">💬</div>
           {[
-            { id: 'dashboard', icon: '⊞' },
-            { id: 'leads', icon: '👥' },
-            { id: 'calls', icon: '📞' },
-            { id: 'followups', icon: '📅' },
-            { id: 'settings', icon: '⚙️' },
+            { id: 'dashboard', icon: '⊞', label: 'Dashboard' },
+            { id: 'leads', icon: '👥', label: 'Leads' },
+            { id: 'calls', icon: '📞', label: 'Calls' },
+            { id: 'followups', icon: '📅', label: 'Follow-ups' },
+            { id: 'settings', icon: '⚙️', label: 'Settings' },
           ].map(item => (
             <button key={item.id} className={`nav-btn ${activeNav === item.id ? 'active' : ''}`}
-              onClick={() => setActiveNav(item.id)} title={item.id} style={{ position: 'relative' }}>
+              onClick={() => setActiveNav(item.id)} title={item.label} style={{ position: 'relative' }}>
               {item.icon}
               {item.id === 'followups' && pendingFollowUps > 0 && (
                 <div className="notification-badge">{pendingFollowUps > 9 ? '9+' : pendingFollowUps}</div>
@@ -447,55 +354,57 @@ export default function CRMDashboard() {
             <span className="topbar-sub">/ Excel Fit India</span>
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
               {newLeadPing && (
-                <div style={{ fontSize: 12, color: 'var(--hot)', background: 'rgba(255,77,109,0.1)', padding: '4px 12px', borderRadius: 20, border: '1px solid rgba(255,77,109,0.3)', animation: 'fadeIn 0.3s ease' }}>
+                <div style={{ fontSize: 12, color: 'var(--hot)', background: 'rgba(255,77,109,0.1)', padding: '4px 12px', borderRadius: 20, border: '1px solid rgba(255,77,109,0.3)' }}>
                   🔥 New lead!
                 </div>
               )}
               {pendingFollowUps > 0 && (
                 <div style={{ fontSize: 12, color: 'var(--warm)', background: 'rgba(255,159,28,0.1)', padding: '4px 12px', borderRadius: 20, border: '1px solid rgba(255,159,28,0.3)' }}>
-                  📅 {pendingFollowUps} follow-ups pending
+                  📅 {pendingFollowUps} pending
                 </div>
               )}
+
+              {/* Export */}
               <div style={{ position: 'relative' }} className="export-wrapper">
-  <button
-    onClick={() => setShowExport(!showExport)}
-    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 12, color: 'var(--text)', fontFamily: 'DM Sans' }}>
-    ⬇️ Export
-  </button>
-  {showExport && (
-    <div style={{ position: 'absolute', right: 0, top: 36, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 8, zIndex: 100, minWidth: 180, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
-      {[
-        { label: '🔥 Hot Leads', filter: 'hot', filename: 'hot-leads.csv' },
-        { label: '🌡️ Warm Leads', filter: 'warm', filename: 'warm-leads.csv' },
-        { label: '❄️ Cold Leads', filter: 'cold', filename: 'cold-leads.csv' },
-        { label: '🏠 CAT A (Home)', filter: 'catA', filename: 'cat-a-leads.csv' },
-        { label: '🏢 CAT B (Gym)', filter: 'catB', filename: 'cat-b-leads.csv' },
-        { label: '🏬 CAT C (Corp)', filter: 'catC', filename: 'cat-c-leads.csv' },
-        { label: '🤝 CAT D (Dealer)', filter: 'catD', filename: 'cat-d-leads.csv' },
-        { label: '✅ All Qualified', filter: 'qualified', filename: 'qualified-leads.csv' },
-        { label: '📋 All Leads', filter: 'all', filename: 'all-leads.csv' },
-      ].map(opt => (
-        <button key={opt.filter}
-          onClick={() => {
-            const toExport = opt.filter === 'all' ? leads
-              : opt.filter === 'qualified' ? leads.filter(l => l.status === 'qualified')
-              : opt.filter === 'catA' ? leads.filter(l => l.lead_cat === 'A')
-              : opt.filter === 'catB' ? leads.filter(l => l.lead_cat === 'B')
-              : opt.filter === 'catC' ? leads.filter(l => l.lead_cat === 'C')
-              : opt.filter === 'catD' ? leads.filter(l => l.lead_cat === 'D')
-              : leads.filter(l => l.category === opt.filter)
-            exportLeads(toExport, opt.filename)
-            setShowExport(false)
-          }}
-          style={{ width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--text)', textAlign: 'left', borderRadius: 6, fontFamily: 'DM Sans' }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  )}
-</div>
+                <button onClick={() => setShowExport(!showExport)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 12, color: 'var(--text)', fontFamily: 'DM Sans' }}>
+                  ⬇️ Export
+                </button>
+                {showExport && (
+                  <div style={{ position: 'absolute', right: 0, top: 36, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 8, zIndex: 100, minWidth: 190, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+                    {[
+                      { label: '🔥 Hot Leads', filter: 'hot', filename: 'hot-leads.csv' },
+                      { label: '🌡️ Warm Leads', filter: 'warm', filename: 'warm-leads.csv' },
+                      { label: '❄️ Cold Leads', filter: 'cold', filename: 'cold-leads.csv' },
+                      { label: '🏠 CAT A (Home)', filter: 'catA', filename: 'cat-a-leads.csv' },
+                      { label: '🏢 CAT B (Gym)', filter: 'catB', filename: 'cat-b-leads.csv' },
+                      { label: '🏬 CAT C (Corp)', filter: 'catC', filename: 'cat-c-leads.csv' },
+                      { label: '🤝 CAT D (Dealer)', filter: 'catD', filename: 'cat-d-leads.csv' },
+                      { label: '✅ All Qualified', filter: 'qualified', filename: 'qualified-leads.csv' },
+                      { label: '📋 All Leads', filter: 'all', filename: 'all-leads.csv' },
+                    ].map(opt => (
+                      <button key={opt.filter}
+                        onClick={() => {
+                          const toExport = opt.filter === 'all' ? leads
+                            : opt.filter === 'qualified' ? leads.filter(l => l.status === 'qualified')
+                            : opt.filter === 'catA' ? leads.filter(l => l.lead_cat === 'A')
+                            : opt.filter === 'catB' ? leads.filter(l => l.lead_cat === 'B')
+                            : opt.filter === 'catC' ? leads.filter(l => l.lead_cat === 'C')
+                            : opt.filter === 'catD' ? leads.filter(l => l.lead_cat === 'D')
+                            : leads.filter(l => l.category === opt.filter)
+                          exportLeads(toExport, opt.filename)
+                          setShowExport(false)
+                        }}
+                        style={{ width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--text)', textAlign: 'left', borderRadius: 6, fontFamily: 'DM Sans' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="live-indicator">
                 <div className="live-dot" />
                 Live
@@ -506,308 +415,402 @@ export default function CRMDashboard() {
           {/* Content */}
           <div className="content">
 
-            {/* Left panel */}
-            <div className="left-panel">
-              <div className="stats-row">
-                {[
-                  { label: 'Total', value: stats.total, color: 'var(--accent)', f: 'all' },
-                  { label: '🔥 Hot', value: stats.hot, color: 'var(--hot)', f: 'hot' },
-                  { label: '🌡 Warm', value: stats.warm, color: 'var(--warm)', f: 'warm' },
-                  { label: '❄️ Cold', value: stats.cold, color: 'var(--cold)', f: 'cold' },
-                ].map(s => (
-                  <div key={s.label} className="stat-box" onClick={() => setFilter(s.f)}>
-                    <div className="stat-label">{s.label}</div>
-                    <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="cat-row">
-                {(['A', 'B', 'C', 'D'] as const).map(cat => (
-                  <div key={cat} className="cat-box">
-                    <div className="cat-label">CAT {cat}</div>
-                    <div className="cat-value">{catStats[cat]}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="search-area">
-                <div className="search-wrapper">
-                  <span className="search-icon">🔍</span>
-                  <input className="search-input" placeholder="Search leads..." value={search}
-                    onChange={e => setSearch(e.target.value)} />
+            {/* CALLS VIEW */}
+            {activeNav === 'calls' && (
+              <div className="full-view">
+                <div className="full-view-header">
+                  <div style={{ fontFamily: 'Syne', fontSize: 16, fontWeight: 700 }}>📞 All Calls</div>
+                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>{leads.filter(l => l.status === 'called' || l.category === 'hot').length} leads called</span>
                 </div>
-                <div className="filter-chips">
-                  {['all', 'hot', 'warm', 'cold'].map(f => (
-                    <button key={f} className={`chip ${filter === f ? `active-${f}` : ''}`}
-                      onClick={() => setFilter(f)}>
-                      {f.charAt(0).toUpperCase() + f.slice(1)} ({f === 'all' ? stats.total : stats[f as keyof typeof stats]})
-                    </button>
+                <div className="full-view-body">
+                  {leads.filter(l => l.status === 'called' || l.category === 'hot').length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'var(--muted)', padding: 40 }}>No calls yet</div>
+                  ) : leads.filter(l => l.status === 'called' || l.category === 'hot').map(lead => (
+                    <div key={lead.id}
+                      style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', cursor: 'pointer' }}
+                      onClick={() => { setSelectedLead(lead); setActiveNav('dashboard'); setActiveTab('calls') }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{lead.name || 'Unknown'}</div>
+                          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>📱 {lead.phone}{lead.customer_city ? ` • 📍 ${lead.customer_city}` : ''}</div>
+                          {lead.product_name && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>📦 {lead.product_name}</div>}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+                          <span className={`badge badge-${lead.category || 'cold'}`}>{lead.category?.toUpperCase()}</span>
+                          <span style={{ fontSize: 10, color: 'var(--muted)' }}>{formatTime(lead.updated_at)}</span>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
+            )}
 
-              <div className="lead-list">
-                {loading ? (
-                  Array(4).fill(0).map((_, i) => <div key={i} className="loading-shimmer" style={{ animationDelay: `${i * 0.1}s` }} />)
-                ) : filtered.length === 0 ? (
-                  <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No leads found</div>
-                ) : filtered.map((lead, i) => (
-                  <div key={lead.id}
-                    className={`lead-item ${selectedLead?.id === lead.id ? 'selected' : ''}`}
-                    data-cat={lead.category}
-                    onClick={() => { setSelectedLead(lead); setActiveTab('chat') }}
-                    style={{ animationDelay: `${i * 0.04}s` }}>
-                    <div className="lead-top">
-                      <div className="lead-name">{lead.name || 'Unknown'}</div>
-                      <div className="badges">
-                        {lead.lead_cat && <span className="badge badge-cat">CAT {lead.lead_cat}</span>}
-                        <span className={`badge badge-${lead.category || 'cold'}`}>{lead.category?.toUpperCase() || 'NEW'}</span>
-                      </div>
-                    </div>
-                    <div className="lead-phone">📱 {lead.phone}{lead.customer_city ? ` • 📍 ${lead.customer_city}` : ''}</div>
-                    {lead.product_name && <div className="lead-msg">📦 {lead.product_name}{lead.units ? ` • ${lead.units}u` : ''}</div>}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 4 }}>{formatTime(lead.updated_at)}</div>
-                      <div style={{ fontSize: 10, color: 'var(--muted)' }}>{getBotStepLabel(lead.bot_step)}</div>
-                    </div>
-                    <div className="step-bar">
-                      <div className="step-fill" style={{ width: `${(lead.bot_step / 9) * 100}%` }} />
-                    </div>
+            {/* FOLLOW-UPS VIEW */}
+            {activeNav === 'followups' && (
+              <div className="full-view">
+                <div className="full-view-header">
+                  <div style={{ fontFamily: 'Syne', fontSize: 16, fontWeight: 700 }}>📅 All Follow-ups</div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <span style={{ fontSize: 12, color: 'var(--warm)', background: 'rgba(255,159,28,0.1)', padding: '3px 10px', borderRadius: 20, border: '1px solid rgba(255,159,28,0.3)' }}>
+                      {allFollowUps.filter(f => f.status === 'pending').length} pending
+                    </span>
+                    <span style={{ fontSize: 12, color: 'var(--green)', background: 'rgba(6,214,160,0.1)', padding: '3px 10px', borderRadius: 20, border: '1px solid rgba(6,214,160,0.3)' }}>
+                      {allFollowUps.filter(f => f.status === 'sent').length} sent
+                    </span>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right panel */}
-            <div className="right-panel">
-              {!selectedLead ? (
-                <div className="empty-state">
-                  <div className="empty-orb">💬</div>
-                  <div style={{ fontFamily: 'Syne', fontSize: 16, fontWeight: 700 }}>Select a lead</div>
-                  <div style={{ fontSize: 13 }}>Click any lead to view details</div>
                 </div>
-              ) : (
-                <>
-                  {/* Lead header */}
-                  <div className="lead-header">
-                    <div className="lead-header-top">
-                      <div>
-                        <div className="lead-header-name">{selectedLead.name || 'Unknown'}</div>
-                        <div className="lead-header-phone">📱 {selectedLead.phone} {selectedLead.language ? `• 🌐 ${selectedLead.language}` : ''}</div>
-                      </div>
-                      <div className="badges" style={{ gap: 6 }}>
-                        {selectedLead.lead_cat && (
-                          <span className="badge badge-cat" style={{ fontSize: 11, padding: '4px 12px' }}>
-                            CAT {selectedLead.lead_cat}
-                          </span>
-                        )}
-                        <span className={`badge badge-${selectedLead.category || 'cold'}`} style={{ fontSize: 11, padding: '4px 12px' }}>
-                          {selectedLead.category?.toUpperCase()} LEAD
-                        </span>
-                      </div>
-                    </div>
-                    <div className="detail-grid">
-                      {[
-                        { k: 'Product', v: selectedLead.product_name },
-                        { k: 'Variant', v: selectedLead.product_variant?.replace('q4_', '') },
-                        { k: 'City', v: selectedLead.customer_city },
-                        { k: 'Budget', v: selectedLead.budget_range?.replace('budget_', '') },
-                        { k: 'Units', v: selectedLead.units },
-                        { k: 'Status', v: getBotStepLabel(selectedLead.bot_step) },
-                      ].filter(d => d.v).map(d => (
-                        <div key={d.k} className="detail-item">
-                          <div className="detail-key">{d.k}</div>
-                          <div className="detail-val">{d.v}</div>
+                <div className="full-view-body">
+                  {allFollowUps.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'var(--muted)', padding: 40 }}>No follow-ups scheduled yet</div>
+                  ) : allFollowUps.map(fu => {
+                    const lead = leads.find(l => l.phone === fu.lead_phone)
+                    const sc = getStatusColor(fu.status)
+                    const isCall = fu.day_number === 7 && fu.category === 'warm'
+                    return (
+                      <div key={fu.id}
+                        style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', cursor: 'pointer' }}
+                        onClick={() => { if (lead) { setSelectedLead(lead); setActiveNav('dashboard'); setActiveTab('followups') } }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', gap: 10 }}>
+                            <div style={{ fontSize: 20 }}>{isCall ? '📞' : '💬'}</div>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
+                                {lead?.name || fu.lead_phone} — Day {fu.day_number}
+                              </div>
+                              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                                {isCall ? 'Kate Call' : 'WhatsApp'} • {formatDate(fu.scheduled_at)}
+                              </div>
+                              {lead?.product_name && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>📦 {lead.product_name} • 📍 {lead.customer_city}</div>}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
+                              {fu.status.toUpperCase()}
+                            </span>
+                            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: fu.category === 'warm' ? 'rgba(255,159,28,0.15)' : 'rgba(76,201,240,0.15)', color: fu.category === 'warm' ? 'var(--warm)' : 'var(--cold)', fontWeight: 600 }}>
+                              {fu.category.toUpperCase()}
+                            </span>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
-                  {/* Tabs */}
-                  <div className="tabs">
+            {/* SETTINGS VIEW */}
+            {activeNav === 'settings' && (
+              <div className="full-view">
+                <div className="full-view-header">
+                  <div style={{ fontFamily: 'Syne', fontSize: 16, fontWeight: 700 }}>⚙️ Settings</div>
+                </div>
+                <div className="full-view-body">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 600 }}>
                     {[
-                      { id: 'chat', label: '💬 Chat' },
-                      { id: 'calls', label: `📞 Calls (${calls.length})` },
-                      { id: 'followups', label: `📅 Follow-ups (${followUps.length})` },
-                      { id: 'details', label: '📊 Details' },
-                    ].map(t => (
-                      <button key={t.id} className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
-                        onClick={() => setActiveTab(t.id as any)}>
-                        {t.label}
-                      </button>
+                      { label: 'WhatsApp Number', value: '+91 87540 41170', icon: '📱' },
+                      { label: 'Business Name', value: 'Excel Fit India', icon: '🏢' },
+                      { label: 'Kate AI Assistant', value: 'Active — GPT-4o-mini', icon: '🤖' },
+                      { label: 'Calling Hours', value: '8:00 AM – 9:30 PM IST', icon: '🕐' },
+                      { label: 'Follow-up Cron', value: 'Daily at 9:00 AM IST', icon: '⏰' },
+                      { label: 'Language Detection', value: 'Auto (City-based)', icon: '🌐' },
+                      { label: 'Hot Lead Action', value: 'Immediate Kate Call', icon: '🔥' },
+                      { label: 'Warm Lead Action', value: '5-touch sequence + call', icon: '🌡️' },
+                      { label: 'Cold Lead Action', value: '3-touch WhatsApp only', icon: '❄️' },
+                      { label: 'Home Users', value: 'Skip units question', icon: '🏠' },
+                    ].map(s => (
+                      <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
+                        <div style={{ fontSize: 18, marginBottom: 8 }}>{s.icon}</div>
+                        <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
+                        <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>{s.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MAIN DASHBOARD + LEADS VIEW */}
+            {(activeNav === 'dashboard' || activeNav === 'leads') && (
+              <>
+                {/* Left panel */}
+                <div className="left-panel">
+                  <div className="stats-row">
+                    {[
+                      { label: 'Total', value: stats.total, color: 'var(--accent)', f: 'all' },
+                      { label: '🔥 Hot', value: stats.hot, color: 'var(--hot)', f: 'hot' },
+                      { label: '🌡 Warm', value: stats.warm, color: 'var(--warm)', f: 'warm' },
+                      { label: '❄️ Cold', value: stats.cold, color: 'var(--cold)', f: 'cold' },
+                    ].map(s => (
+                      <div key={s.label} className="stat-box" onClick={() => setFilter(s.f)}>
+                        <div className="stat-label">{s.label}</div>
+                        <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
+                      </div>
                     ))}
                   </div>
 
-                  {/* WhatsApp Chat */}
-                  {activeTab === 'chat' && (
-                    <div className="chat-area">
-                      {whatsappMessages.length === 0 ? (
-                        <div style={{ textAlign: 'center', color: 'var(--muted)', padding: 40, fontSize: 13 }}>No WhatsApp messages yet</div>
-                      ) : whatsappMessages.map((msg, i) => (
-                        <div key={msg.id} className={`msg ${msg.direction}`} style={{ animationDelay: `${i * 0.03}s` }}>
-                          <div className="msg-bubble">{msg.body}</div>
-                          <div className="msg-time">{formatTime(msg.created_at)}</div>
-                        </div>
-                      ))}
-                      <div ref={chatEndRef} />
-                    </div>
-                  )}
+                  <div className="cat-row">
+                    {(['A', 'B', 'C', 'D'] as const).map(cat => (
+                      <div key={cat} className="cat-box">
+                        <div className="cat-label">CAT {cat}</div>
+                        <div className="cat-value">{catStats[cat]}</div>
+                      </div>
+                    ))}
+                  </div>
 
-                  {/* Calls */}
-                  {activeTab === 'calls' && (
-                    <div className="calls-area">
-                      {calls.length === 0 ? (
-                        <div style={{ textAlign: 'center', color: 'var(--muted)', padding: 40, fontSize: 13 }}>No calls yet</div>
-                      ) : calls.map(call => (
-                        <div key={call.id} className="call-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
-                            <div className="call-icon" style={{ background: call.status === 'completed' ? 'rgba(6,214,160,0.1)' : 'rgba(255,77,109,0.1)', flexShrink: 0 }}>
-                              {call.status === 'completed' ? '✅' : '📞'}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Kate AI Call</div>
-                              <div style={{ fontSize: 11, color: 'var(--muted)' }}>
-                                {formatTime(call.created_at)}{call.duration ? ` • ${call.duration}s` : ''}
-                              </div>
-                            </div>
-                            <span className={`badge ${call.status === 'completed' ? 'badge-cold' : 'badge-hot'}`} style={{ fontSize: 11 }}>
-                              {call.status}
+                  <div className="search-area">
+                    <div className="search-wrapper">
+                      <span className="search-icon">🔍</span>
+                      <input className="search-input" placeholder="Search leads..." value={search}
+                        onChange={e => setSearch(e.target.value)} />
+                    </div>
+                    <div className="filter-chips">
+                      {['all', 'hot', 'warm', 'cold'].map(f => (
+                        <button key={f} className={`chip ${filter === f ? `active-${f}` : ''}`}
+                          onClick={() => setFilter(f)}>
+                          {f.charAt(0).toUpperCase() + f.slice(1)} ({f === 'all' ? stats.total : stats[f as keyof typeof stats]})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="lead-list">
+                    {loading ? (
+                      Array(4).fill(0).map((_, i) => <div key={i} className="loading-shimmer" style={{ animationDelay: `${i * 0.1}s` }} />)
+                    ) : filtered.length === 0 ? (
+                      <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No leads found</div>
+                    ) : filtered.map((lead, i) => (
+                      <div key={lead.id}
+                        className={`lead-item ${selectedLead?.id === lead.id ? 'selected' : ''}`}
+                        data-cat={lead.category}
+                        onClick={() => { setSelectedLead(lead); setActiveTab('chat') }}
+                        style={{ animationDelay: `${i * 0.04}s` }}>
+                        <div className="lead-top">
+                          <div className="lead-name">{lead.name || 'Unknown'}</div>
+                          <div className="badges">
+                            {lead.lead_cat && <span className="badge badge-cat">CAT {lead.lead_cat}</span>}
+                            <span className={`badge badge-${lead.category || 'cold'}`}>{lead.category?.toUpperCase() || 'NEW'}</span>
+                          </div>
+                        </div>
+                        <div className="lead-phone">📱 {lead.phone}{lead.customer_city ? ` • 📍 ${lead.customer_city}` : ''}</div>
+                        {lead.product_name && <div className="lead-msg">📦 {lead.product_name}{lead.units ? ` • ${lead.units}u` : ''}</div>}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 4 }}>{formatTime(lead.updated_at)}</div>
+                          <div style={{ fontSize: 10, color: 'var(--muted)' }}>{getBotStepLabel(lead.bot_step)}</div>
+                        </div>
+                        <div className="step-bar">
+                          <div className="step-fill" style={{ width: `${(lead.bot_step / 9) * 100}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right panel */}
+                <div className="right-panel">
+                  {!selectedLead ? (
+                    <div className="empty-state">
+                      <div className="empty-orb">💬</div>
+                      <div style={{ fontFamily: 'Syne', fontSize: 16, fontWeight: 700 }}>Select a lead</div>
+                      <div style={{ fontSize: 13 }}>Click any lead to view details</div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="lead-header">
+                        <div className="lead-header-top">
+                          <div>
+                            <div className="lead-header-name">{selectedLead.name || 'Unknown'}</div>
+                            <div className="lead-header-phone">📱 {selectedLead.phone}{selectedLead.language ? ` • 🌐 ${selectedLead.language}` : ''}</div>
+                          </div>
+                          <div className="badges" style={{ gap: 6 }}>
+                            {selectedLead.lead_cat && (
+                              <span className="badge badge-cat" style={{ fontSize: 11, padding: '4px 12px' }}>CAT {selectedLead.lead_cat}</span>
+                            )}
+                            <span className={`badge badge-${selectedLead.category || 'cold'}`} style={{ fontSize: 11, padding: '4px 12px' }}>
+                              {selectedLead.category?.toUpperCase()} LEAD
                             </span>
                           </div>
-                          {call.recording_url && (
-                            <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', border: '1px solid var(--border)' }}>
-                              <div style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>
-                                🎙️ Call Recording
-                              </div>
-                              <audio controls preload="none" style={{ width: '100%', height: 36 }}>
-                                <source src={call.recording_url} type="audio/wav" />
-                                <source src={call.recording_url} type="audio/mpeg" />
-                              </audio>
+                        </div>
+                        <div className="detail-grid">
+                          {[
+                            { k: 'Product', v: selectedLead.product_name },
+                            { k: 'Variant', v: selectedLead.product_variant?.replace('q4_', '') },
+                            { k: 'City', v: selectedLead.customer_city },
+                            { k: 'Budget', v: selectedLead.budget_range?.replace('budget_', '') },
+                            { k: 'Units', v: selectedLead.units },
+                            { k: 'Status', v: getBotStepLabel(selectedLead.bot_step) },
+                          ].filter(d => d.v).map(d => (
+                            <div key={d.k} className="detail-item">
+                              <div className="detail-key">{d.k}</div>
+                              <div className="detail-val">{d.v}</div>
                             </div>
-                          )}
-                          {call.transcript && (
-                            <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', border: '1px solid var(--border)', maxHeight: 200, overflowY: 'auto' }}>
-                              <div style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 700, marginBottom: 10, textTransform: 'uppercase' }}>
-                                📝 Transcript
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="tabs">
+                        {[
+                          { id: 'chat', label: '💬 Chat' },
+                          { id: 'calls', label: `📞 Calls (${calls.length})` },
+                          { id: 'followups', label: `📅 Follow-ups (${followUps.length})` },
+                          { id: 'details', label: '📊 Details' },
+                        ].map(t => (
+                          <button key={t.id} className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
+                            onClick={() => setActiveTab(t.id as any)}>
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Chat */}
+                      {activeTab === 'chat' && (
+                        <div className="chat-area">
+                          {whatsappMessages.length === 0 ? (
+                            <div style={{ textAlign: 'center', color: 'var(--muted)', padding: 40, fontSize: 13 }}>No WhatsApp messages yet</div>
+                          ) : whatsappMessages.map((msg, i) => (
+                            <div key={msg.id} className={`msg ${msg.direction}`} style={{ animationDelay: `${i * 0.03}s` }}>
+                              <div className="msg-bubble">{msg.body}</div>
+                              <div className="msg-time">{formatTime(msg.created_at)}</div>
+                            </div>
+                          ))}
+                          <div ref={chatEndRef} />
+                        </div>
+                      )}
+
+                      {/* Calls */}
+                      {activeTab === 'calls' && (
+                        <div className="calls-area">
+                          {calls.length === 0 ? (
+                            <div style={{ textAlign: 'center', color: 'var(--muted)', padding: 40, fontSize: 13 }}>No calls yet</div>
+                          ) : calls.map(call => (
+                            <div key={call.id} className="call-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+                                <div className="call-icon" style={{ background: call.status === 'completed' ? 'rgba(6,214,160,0.1)' : 'rgba(255,77,109,0.1)' }}>
+                                  {call.status === 'completed' ? '✅' : '📞'}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Kate AI Call</div>
+                                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>{formatTime(call.created_at)}{call.duration ? ` • ${call.duration}s` : ''}</div>
+                                </div>
+                                <span className={`badge ${call.status === 'completed' ? 'badge-cold' : 'badge-hot'}`}>{call.status}</span>
                               </div>
-                              {call.transcript.split('\n').filter(Boolean).map((line, i) => {
-                                const isAI = line.startsWith('AI:')
-                                const isUser = line.startsWith('User:')
+                              {call.recording_url && (
+                                <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', border: '1px solid var(--border)' }}>
+                                  <div style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>🎙️ Recording</div>
+                                  <audio controls preload="none" style={{ width: '100%', height: 36 }}>
+                                    <source src={call.recording_url} type="audio/wav" />
+                                    <source src={call.recording_url} type="audio/mpeg" />
+                                  </audio>
+                                </div>
+                              )}
+                              {call.transcript && (
+                                <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', border: '1px solid var(--border)', maxHeight: 200, overflowY: 'auto' }}>
+                                  <div style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 700, marginBottom: 10, textTransform: 'uppercase' }}>📝 Transcript</div>
+                                  {call.transcript.split('\n').filter(Boolean).map((line, i) => {
+                                    const isAI = line.startsWith('AI:')
+                                    const isUser = line.startsWith('User:')
+                                    return (
+                                      <div key={i} style={{ marginBottom: 8, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                                        <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, flexShrink: 0, marginTop: 2, background: isAI ? 'rgba(0,229,255,0.15)' : 'rgba(124,58,237,0.15)', color: isAI ? 'var(--accent)' : '#a78bfa' }}>
+                                          {isAI ? 'KATE' : isUser ? 'USER' : '—'}
+                                        </span>
+                                        <span style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>
+                                          {line.replace(/^(AI:|User:)\s*/, '')}
+                                        </span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Follow-ups */}
+                      {activeTab === 'followups' && (
+                        <div className="followups-area">
+                          {followUps.length === 0 ? (
+                            <div style={{ textAlign: 'center', color: 'var(--muted)', padding: 40, fontSize: 13 }}>No follow-ups scheduled</div>
+                          ) : (
+                            <>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 8 }}>
+                                {[
+                                  { label: 'Total', value: followUps.length, color: 'var(--accent)' },
+                                  { label: 'Pending', value: followUps.filter(f => f.status === 'pending').length, color: 'var(--warm)' },
+                                  { label: 'Sent', value: followUps.filter(f => f.status === 'sent').length, color: 'var(--green)' },
+                                ].map(s => (
+                                  <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px' }}>
+                                    <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
+                                    <div style={{ fontSize: 20, fontWeight: 700, color: s.color, fontFamily: 'Syne' }}>{s.value}</div>
+                                  </div>
+                                ))}
+                              </div>
+                              {followUps.map(fu => {
+                                const sc = getStatusColor(fu.status)
+                                const isCall = fu.day_number === 7 && fu.category === 'warm'
                                 return (
-                                  <div key={i} style={{ marginBottom: 8, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                    <span style={{
-                                      fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, flexShrink: 0, marginTop: 2,
-                                      background: isAI ? 'rgba(0,229,255,0.15)' : 'rgba(124,58,237,0.15)',
-                                      color: isAI ? 'var(--accent)' : '#a78bfa'
-                                    }}>
-                                      {isAI ? 'KATE' : isUser ? 'USER' : '—'}
-                                    </span>
-                                    <span style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>
-                                      {line.replace(/^(AI:|User:)\s*/, '')}
-                                    </span>
+                                  <div key={fu.id} className="followup-item">
+                                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: isCall ? 'rgba(0,229,255,0.1)' : 'rgba(124,58,237,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>
+                                        {isCall ? '📞' : '💬'}
+                                      </div>
+                                      <div style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
+                                            Day {fu.day_number} — {isCall ? 'Kate Call' : 'WhatsApp'}
+                                          </div>
+                                          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
+                                            {fu.status.toUpperCase()}
+                                          </span>
+                                        </div>
+                                        <div style={{ fontSize: 11, color: 'var(--muted)' }}>📅 {formatDate(fu.scheduled_at)}</div>
+                                        {fu.sent_at && <div style={{ fontSize: 11, color: 'var(--green)', marginTop: 2 }}>✅ Sent: {formatDate(fu.sent_at)}</div>}
+                                        <div style={{ marginTop: 6 }}>
+                                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: fu.category === 'warm' ? 'rgba(255,159,28,0.15)' : 'rgba(76,201,240,0.15)', color: fu.category === 'warm' ? 'var(--warm)' : 'var(--cold)', fontWeight: 600 }}>
+                                            {fu.category.toUpperCase()} SEQUENCE
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
                                 )
                               })}
-                            </div>
+                            </>
                           )}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      )}
 
-                  {/* Follow-ups */}
-                  {activeTab === 'followups' && (
-                    <div className="followups-area">
-                      {followUps.length === 0 ? (
-                        <div style={{ textAlign: 'center', color: 'var(--muted)', padding: 40, fontSize: 13 }}>
-                          No follow-ups scheduled
-                        </div>
-                      ) : (
-                        <>
-                          {/* Summary row */}
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 8 }}>
+                      {/* Details */}
+                      {activeTab === 'details' && (
+                        <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                             {[
-                              { label: 'Total', value: followUps.length, color: 'var(--accent)' },
-                              { label: 'Pending', value: followUps.filter(f => f.status === 'pending').length, color: 'var(--warm)' },
-                              { label: 'Sent', value: followUps.filter(f => f.status === 'sent').length, color: 'var(--green)' },
-                            ].map(s => (
-                              <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px' }}>
-                                <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
-                                <div style={{ fontSize: 20, fontWeight: 700, color: s.color, fontFamily: 'Syne' }}>{s.value}</div>
+                              { k: 'Bot Step', v: getBotStepLabel(selectedLead.bot_step) },
+                              { k: 'Usage Type', v: selectedLead.usage_type },
+                              { k: 'Language', v: selectedLead.language },
+                              { k: 'Status', v: selectedLead.status },
+                              { k: 'First Contact', v: formatTime(selectedLead.created_at) },
+                              { k: 'Last Activity', v: formatTime(selectedLead.updated_at) },
+                              { k: 'WhatsApp Messages', v: `${whatsappMessages.length} total` },
+                              { k: 'Calls Made', v: `${calls.length} total` },
+                              { k: 'Follow-ups', v: `${followUps.length} scheduled` },
+                              { k: 'Category', v: `CAT ${selectedLead.lead_cat || '—'}` },
+                            ].map(d => (
+                              <div key={d.k} className="detail-item" style={{ padding: '12px 14px' }}>
+                                <div className="detail-key">{d.k}</div>
+                                <div className="detail-val" style={{ fontSize: 14, marginTop: 4 }}>{d.v || '—'}</div>
                               </div>
                             ))}
                           </div>
-
-                          {/* Timeline */}
-                          {followUps.map((fu, i) => {
-                            const sc = getStatusColor(fu.status)
-                            const isCall = fu.day_number === 7 && fu.category === 'warm'
-                            return (
-                              <div key={fu.id} className="followup-item">
-                                <div className="followup-timeline">
-                                  <div className="followup-dot" style={{ background: isCall ? 'rgba(0,229,255,0.1)' : 'rgba(124,58,237,0.1)' }}>
-                                    {getDayIcon(fu.day_number, fu.category)}
-                                  </div>
-                                  <div style={{ flex: 1 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
-                                        Day {fu.day_number} — {isCall ? 'Kate Call' : 'WhatsApp Message'}
-                                      </div>
-                                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
-                                        {fu.status.toUpperCase()}
-                                      </span>
-                                    </div>
-                                    <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: fu.sent_at ? 4 : 0 }}>
-                                      📅 Scheduled: {formatDate(fu.scheduled_at)}
-                                    </div>
-                                    {fu.sent_at && (
-                                      <div style={{ fontSize: 11, color: 'var(--green)' }}>
-                                        ✅ Sent: {formatDate(fu.sent_at)}
-                                      </div>
-                                    )}
-                                    <div style={{ marginTop: 6 }}>
-                                      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: fu.category === 'warm' ? 'rgba(255,159,28,0.15)' : 'rgba(76,201,240,0.15)', color: fu.category === 'warm' ? 'var(--warm)' : 'var(--cold)', fontWeight: 600 }}>
-                                        {fu.category.toUpperCase()} SEQUENCE
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </>
+                        </div>
                       )}
-                    </div>
+                    </>
                   )}
-
-                  {/* Details */}
-                  {activeTab === 'details' && (
-                    <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                        {[
-                          { k: 'Bot Step', v: getBotStepLabel(selectedLead.bot_step) },
-                          { k: 'Usage Type', v: selectedLead.usage_type },
-                          { k: 'Language', v: selectedLead.language },
-                          { k: 'Status', v: selectedLead.status },
-                          { k: 'First Contact', v: formatTime(selectedLead.created_at) },
-                          { k: 'Last Activity', v: formatTime(selectedLead.updated_at) },
-                          { k: 'WhatsApp Messages', v: `${whatsappMessages.length} total` },
-                          { k: 'Calls Made', v: `${calls.length} total` },
-                          { k: 'Follow-ups', v: `${followUps.length} scheduled` },
-                          { k: 'Category', v: `CAT ${selectedLead.lead_cat || '—'}` },
-                        ].map(d => (
-                          <div key={d.k} className="detail-item" style={{ padding: '12px 14px' }}>
-                            <div className="detail-key">{d.k}</div>
-                            <div className="detail-val" style={{ fontSize: 14, marginTop: 4 }}>{d.v || '—'}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
